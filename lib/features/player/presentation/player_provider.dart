@@ -59,7 +59,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
 
   Future<void> playStory(Story story) async {
     state = state.copyWith(currentStory: story);
-    await _audioPlayer.setUrl(story.audioUrl);
+
+    if (story.audioUrl.startsWith('assets/')) {
+      await _audioPlayer.setAsset(story.audioUrl);
+    } else {
+      await _audioPlayer.setUrl(story.audioUrl);
+    }
+
     _audioPlayer.play();
   }
 

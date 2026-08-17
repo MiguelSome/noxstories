@@ -5,12 +5,27 @@ import '../../../core/constants/mock_stories.dart';
 import '../../../core/models/story_model.dart';
 import '../../player/presentation/player_provider.dart';
 
+final selectedCategoryProvider = StateProvider<String>((ref) => 'Todos');
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  static const List<String> categories = [
+    'Todos',
+    'Historia',
+    'Mitología',
+    'Misterio',
+    'Ciencia Ficción',
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stories = MockStories.sampleStories;
+    final selectedCategory = ref.watch(selectedCategoryProvider);
+    final allStories = MockStories.sampleStories;
+
+    final filteredStories = selectedCategory == 'Todos'
+        ? allStories
+        : allStories.where((s) => s.category == selectedCategory).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -24,25 +39,86 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: CustomScrollView(
         slivers: [
+          // Selector interactivo de Categorías
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Historias para la Noche',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'Explorar Campos',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(
+                  height: 48,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      final isSelected = category == selectedCategory;
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: FilterChip(
+                          selected: isSelected,
+                          label: Text(category),
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          selectedColor: AppColors.primary,
+                          backgroundColor: AppColors.surface,
+                          checkmarkColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          onSelected: (_) {
+                            ref.read(selectedCategoryProvider.notifier).state = category;
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
+                  child: Text(
+                    'Historias para la Noche',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SliverList(
+          // Lista de historias filtradas
+          filteredStories.isEmpty
+              ? const SliverFillRemaining(
+            child: Center(
+              child: Text(
+                'No hay historias disponibles en esta categoría',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
+            ),
+          )
+              : SliverList(
             delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                final story = stories[index];
+                final story = filteredStories[index];
                 return _StoryCard(story: story);
               },
-              childCount: stories.length,
+              childCount: filteredStories.length,
             ),
           ),
         ],
