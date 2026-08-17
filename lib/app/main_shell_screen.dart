@@ -4,55 +4,59 @@ import '../core/constants/app_colors.dart';
 import '../features/player/presentation/mini_player_widget.dart';
 
 class MainShellScreen extends StatelessWidget {
-  final StatefulNavigationShell navigationShell;
+  final Widget child;
 
-  const MainShellScreen({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainShellScreen({super.key, required this.child});
 
-  void _onTap(int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
-    );
+  int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).uri.toString();
+    if (location.startsWith('/explore')) return 1;
+    return 0;
+  }
+
+  void _onItemTapped(int index, BuildContext context) {
+    switch (index) {
+      case 0:
+        context.go('/');
+        break;
+      case 1:
+        context.go('/explore');
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final selectedIndex = _calculateSelectedIndex(context);
+
     return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
+      backgroundColor: AppColors.background,
+      body: Stack(
         children: [
-          const MiniPlayerWidget(),
-          NavigationBar(
-            selectedIndex: navigationShell.currentIndex,
-            onDestinationSelected: _onTap,
-            backgroundColor: AppColors.surface,
-            indicatorColor: AppColors.primary.withValues(alpha: 0.3),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.auto_stories_outlined),
-                selectedIcon: Icon(Icons.auto_stories, color: AppColors.primary),
-                label: 'Inicio',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.grid_view_outlined),
-                selectedIcon: Icon(Icons.grid_view, color: AppColors.primary),
-                label: 'Explorar',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.bookmark_outline),
-                selectedIcon: Icon(Icons.bookmark, color: AppColors.primary),
-                label: 'Biblioteca',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings, color: AppColors.primary),
-                label: 'Ajustes',
-              ),
-            ],
+          child,
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MiniPlayerWidget(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) => _onItemTapped(index, context),
+        backgroundColor: AppColors.surface,
+        indicatorColor: AppColors.primary.withValues(alpha: 0.3),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined, color: AppColors.textSecondary),
+            selectedIcon: Icon(Icons.home_rounded, color: AppColors.primary),
+            label: 'Inicio',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.explore_outlined, color: AppColors.textSecondary),
+            selectedIcon: Icon(Icons.explore_rounded, color: AppColors.primary),
+            label: 'Explorar',
           ),
         ],
       ),
