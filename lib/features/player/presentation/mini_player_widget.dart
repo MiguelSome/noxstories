@@ -138,7 +138,7 @@ class MiniPlayerWidget extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  formatDuration(currentPos),
+                  formatDuration(currentPos, referenceDuration: totalDur),
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                 ),
                 Text(
