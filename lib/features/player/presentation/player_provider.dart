@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../core/models/story_model.dart';
@@ -8,6 +9,7 @@ class PlayerState {
   final Duration position;
   final Duration duration;
   final double speed;
+  final Duration? sleepTimerRemaining; // Tiempo restante del temporizador
 
   const PlayerState({
     this.currentStory,
@@ -15,6 +17,7 @@ class PlayerState {
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.speed = 1.0,
+    this.sleepTimerRemaining,
   });
 
   PlayerState copyWith({
@@ -23,6 +26,7 @@ class PlayerState {
     Duration? position,
     Duration? duration,
     double? speed,
+    Duration? Function()? sleepTimerRemaining,
   }) {
     return PlayerState(
       currentStory: currentStory ?? this.currentStory,
@@ -30,12 +34,16 @@ class PlayerState {
       position: position ?? this.position,
       duration: duration ?? this.duration,
       speed: speed ?? this.speed,
+      sleepTimerRemaining: sleepTimerRemaining != null
+          ? sleepTimerRemaining()
+          : this.sleepTimerRemaining,
     );
   }
 }
 
 class PlayerNotifier extends StateNotifier<PlayerState> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  Timer? _sleepTimer;
 
   PlayerNotifier() : super(const PlayerState()) {
     _initListeners();
@@ -56,13 +64,13 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
       }
     });
   }
+
   Future<void> playStory(Story story) async {
     state = state.copyWith(currentStory: story);
 
     if (story.audioUrl.startsWith('assets/')) {
       await _audioPlayer.setAsset(story.audioUrl);
     } else {
-      // Procesa URLs remotas (HTTP / HTTPS)
       await _audioPlayer.setUrl(story.audioUrl);
     }
 
@@ -86,8 +94,36 @@ class PlayerNotifier extends StateNotifier<PlayerState> {
     state = state.copyWith(speed: speed);
   }
 
+  // --- LÓGICA DEL TEMPORIZADOR DE APAGADO ---
+
+  void setSleepTimer(Duration duration) {
+    cancelSleepTimer();
+
+    state = state.copyWith(sleepTimerRemaining: () => duration);
+
+    _sleepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final remaining = state.sleepTimerRemaining;
+
+      if (remaining == null || remaining.inSeconds <= 1) {
+        _audioPlayer.pause();
+        cancelSleepTimer();
+      } else {
+        state = state.copyWith(
+          sleepTimerRemaining: () => remaining - const Duration(seconds: 1),
+        );
+      }
+    });
+  }
+
+  void cancelSleepTimer() {
+    _sleepTimer?.cancel();
+    _sleepTimer = null;
+    state = state.copyWith(sleepTimerRemaining: () => null);
+  }
+
   @override
   void dispose() {
+    _sleepTimer?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }

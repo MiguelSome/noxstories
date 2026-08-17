@@ -30,7 +30,7 @@ class MainShellScreen extends StatelessWidget {
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: _onTap,
             backgroundColor: AppColors.surface,
-            indicatorColor: AppColors.primary.withOpacity(0.3),
+            indicatorColor: AppColors.primary.withValues(alpha: 0.3),
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.auto_stories_outlined),

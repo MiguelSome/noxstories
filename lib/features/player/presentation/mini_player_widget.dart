@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/duration_formatter.dart';
 import 'player_provider.dart';
+import 'sleep_timer_dialog.dart';
 
 class MiniPlayerWidget extends ConsumerWidget {
   const MiniPlayerWidget({super.key});
@@ -16,6 +17,7 @@ class MiniPlayerWidget extends ConsumerWidget {
 
     final currentPos = playerState.position;
     final totalDur = playerState.duration;
+    final remainingTimer = playerState.sleepTimerRemaining;
     final maxMs = totalDur.inMilliseconds > 0 ? totalDur.inMilliseconds.toDouble() : 1.0;
     final currentMs = currentPos.inMilliseconds.toDouble().clamp(0.0, maxMs);
 
@@ -27,7 +29,7 @@ class MiniPlayerWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -53,7 +55,7 @@ class MiniPlayerWidget extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,38 +82,34 @@ class MiniPlayerWidget extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Botón saltar -10s
               IconButton(
                 iconSize: 22,
-                icon: const Icon(Icons.replay_10_rounded, color: AppColors.textSecondary),
+                tooltip: 'Temporizador de apagado',
+                icon: Icon(
+                  remainingTimer != null ? Icons.bedtime_rounded : Icons.bedtime_outlined,
+                  color: remainingTimer != null ? AppColors.primary : AppColors.textSecondary,
+                ),
                 onPressed: () {
-                  final newPos = currentPos - const Duration(seconds: 10);
-                  ref.read(playerProvider.notifier).seek(newPos < Duration.zero ? Duration.zero : newPos);
+                  showDialog(
+                    context: context,
+                    builder: (context) => const SleepTimerDialog(),
+                  );
                 },
               ),
-              // Botón Play / Pause
               IconButton(
-                iconSize: 30,
+                iconSize: 32,
                 icon: Icon(
-                  playerState.isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                  playerState.isPlaying
+                      ? Icons.pause_circle_filled_rounded
+                      : Icons.play_circle_fill_rounded,
                   color: AppColors.primary,
                 ),
                 onPressed: () {
                   ref.read(playerProvider.notifier).togglePlayPause();
                 },
               ),
-              // Botón saltar +10s
-              IconButton(
-                iconSize: 22,
-                icon: const Icon(Icons.forward_10_rounded, color: AppColors.textSecondary),
-                onPressed: () {
-                  final newPos = currentPos + const Duration(seconds: 10);
-                  ref.read(playerProvider.notifier).seek(newPos > totalDur ? totalDur : newPos);
-                },
-              ),
             ],
           ),
-          // Barra de progreso deslizante con marcas de tiempo
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 3,
@@ -141,6 +139,15 @@ class MiniPlayerWidget extends ConsumerWidget {
                   formatDuration(currentPos, referenceDuration: totalDur),
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
                 ),
+                if (remainingTimer != null)
+                  Text(
+                    'Apagado en: ${formatDuration(remainingTimer)}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 Text(
                   formatDuration(totalDur),
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
