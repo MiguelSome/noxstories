@@ -42,5 +42,15 @@ abstract class MockStories {
       duration: Duration(minutes: 12, seconds: 45),
       category: 'Ciencia Ficción',
     ),
+    Story(
+      id: '5',
+      title: 'Meditación para dormir',
+      author: 'Gabriela Litschi',
+      description: 'Un viaje relajante hacia las profundidades sueño.',
+      coverUrl: 'https://picsum.photos/id/1043/400/400',
+      audioUrl: 'https://xgenhpidwwfvxbmusvxm.supabase.co/storage/v1/object/sign/Noxstories/meditacion_1.mp3?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNTQ0ZmZhOS0wYTAzLTQzNjUtOTM2MS0zYTk4ODA5YTk2MjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJOb3hzdG9yaWVzL21lZGl0YWNpb25fMS5tcDMiLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzg2OTg1Nzc3LCJleHAiOjE4NTAwNTc3Nzd9.O5zRhvcgkPSBLK1mGB6xGgzQOlZrSqfNQti7DDA96iw',
+      duration: Duration(minutes: 12, seconds: 45),
+      category: 'Meditación',
+    ),
   ];
 }

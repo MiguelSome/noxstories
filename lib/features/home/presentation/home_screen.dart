@@ -16,6 +16,7 @@ class HomeScreen extends ConsumerWidget {
     'Mitología',
     'Misterio',
     'Ciencia Ficción',
+    'Meditación',
   ];
 
   @override
